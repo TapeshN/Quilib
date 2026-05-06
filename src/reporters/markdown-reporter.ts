@@ -1,38 +1,44 @@
-import type { GapAnalysis } from '../schemas/gap-analysis.schema.js';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { GapAnalysis } from '../schemas/gap-analysis.schema.js';
 
-export async function writeMarkdownReport(
-  analysis: GapAnalysis,
-  outputDir: string
-): Promise<void> {
-  const bySeverity = {
-    high: analysis.gaps.filter((gap) => gap.severity === 'high').length,
-    medium: analysis.gaps.filter((gap) => gap.severity === 'medium').length,
-    low: analysis.gaps.filter((gap) => gap.severity === 'low').length,
-  };
-
-  const lines = [
-    '# Quilib Quality Gap Report',
-    '',
-    `- Analyzed at: ${analysis.analyzedAt}`,
-    `- Mode: ${analysis.mode}`,
-    `- Release confidence: ${analysis.releaseConfidence}%`,
-    `- Total gaps: ${analysis.gaps.length}`,
-    `- High: ${bySeverity.high}, Medium: ${bySeverity.medium}, Low: ${bySeverity.low}`,
-    '',
-    '## Gaps',
-    '',
-  ];
-
-  if (analysis.gaps.length === 0) {
-    lines.push('No quality gaps were detected.');
-  } else {
-    for (const gap of analysis.gaps) {
-      lines.push(`- [${gap.severity.toUpperCase()}] ${gap.path} (${gap.category}) - ${gap.reason}`);
-    }
-  }
-
+export async function writeMarkdownReport(analysis: GapAnalysis, outputDir: string): Promise<void> {
   await mkdir(outputDir, { recursive: true });
-  await writeFile(join(outputDir, 'quality-gap-report.md'), lines.join('\n'), 'utf8');
+
+  const recommendation =
+    analysis.releaseConfidence >= 80 ? 'READY' :
+    analysis.releaseConfidence >= 50 ? 'CONDITIONAL' : 'NOT READY';
+
+  const gapRows = analysis.gaps
+    .map((g) => `| ${g.path} | ${g.category} | ${g.severity} | ${g.reason} |`)
+    .join('\n');
+
+  const scenarioBlocks = analysis.scenarios
+    .map((s) => `### ${s.title}\n${s.description}\n\nSteps:\n${s.steps.map((step) => `- ${step.description}`).join('\n')}\n\nRecommended adapters: ${s.recommendations.map((r) => r.adapter).join(', ')}`)
+    .join('\n\n---\n\n');
+
+  const md = `# Quilib Quality Gap Report
+
+**Generated:** ${analysis.analyzedAt}
+**Mode:** ${analysis.mode}
+**Release confidence:** ${analysis.releaseConfidence}/100 — ${recommendation}
+
+## Coverage gaps (${analysis.gaps.length})
+
+| Path | Category | Severity | Reason |
+|------|----------|----------|--------|
+${gapRows}
+
+## Generated scenarios (${analysis.scenarios.length})
+
+${scenarioBlocks || '_No scenarios generated._'}
+
+## Decision log
+
+See \`.scan-state/decision-log.json\` for the full audit trail.
+`;
+
+  const filePath = join(outputDir, 'report.md');
+  await writeFile(filePath, md, 'utf-8');
+  console.log(`[quilib] Markdown report written to ${filePath}`);
 }
