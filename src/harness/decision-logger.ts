@@ -12,7 +12,7 @@ export async function logDecision(entry: DecisionLogEntry): Promise<void> {
     const validation = DecisionLogEntrySchema.safeParse(entry);
     if (!validation.success) {
       console.warn(
-        `Failed to log decision: entry validation failed with issues ${JSON.stringify(validation.error.issues)}`
+        `Failed to log decision entry to ${LOG_FILE}: validation issues ${JSON.stringify(validation.error.issues)}`
       );
       return;
     }
@@ -25,7 +25,7 @@ export async function logDecision(entry: DecisionLogEntry): Promise<void> {
         const raw = await readFile(LOG_FILE, 'utf8');
         const parsed = JSON.parse(raw) as unknown;
         if (!Array.isArray(parsed)) {
-          console.warn('Failed to log decision: decision-log.json is not an array; resetting log');
+          console.warn(`Failed to log decision entry to ${LOG_FILE}: file is not a JSON array; resetting log`);
         } else {
           const validatedEntries: DecisionLogEntry[] = [];
           for (const item of parsed) {
@@ -34,7 +34,7 @@ export async function logDecision(entry: DecisionLogEntry): Promise<void> {
               validatedEntries.push(itemValidation.data);
             } else {
               console.warn(
-                `Invalid existing decision log entry skipped: ${JSON.stringify(itemValidation.error.issues)}`
+                `Invalid existing entry skipped in ${LOG_FILE}: ${JSON.stringify(itemValidation.error.issues)}`
               );
             }
           }

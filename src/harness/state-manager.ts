@@ -8,6 +8,7 @@ const STATE_DIR = join(process.cwd(), '.scan-state');
 
 export class StateManager {
   async readState<T>(filename: string, schema: ZodSchema<T>): Promise<T> {
+    await mkdir(STATE_DIR, { recursive: true });
     const filepath = join(STATE_DIR, filename);
     if (!existsSync(filepath)) {
       throw new Error(`State file missing: ${filename} (${filepath})`);
