@@ -83,7 +83,7 @@ export async function think(
 
   const completeAnalysis = GapAnalysisSchema.parse({
     ...partialAnalysis,
-    scenarios: [],
+    scenarios: generatedScenarios,
     generatedTests: [],
   });
   await stateManager.writeState('gap-analysis.json', completeAnalysis, GapAnalysisSchema);
