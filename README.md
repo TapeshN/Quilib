@@ -1,22 +1,26 @@
 # Quilib
 
-Quilib is a TypeScript-first QA harness scaffold for analyzing app quality gaps and generating test assets through pluggable explorers and adapters.
+Quilib is a TypeScript-first QA harness for analyzing web app quality gaps and generating actionable reports from real app + repo scans.
 
 ## Current Status
 
-This repository is intentionally scaffold-only:
+MVP path is implemented end-to-end:
 
-- Folder structure and module boundaries are in place.
-- Schemas, interfaces, and exported signatures are defined.
-- Runtime implementations are not added yet (`Not implemented` placeholders).
+- CLI `analyze` flow is wired through `observe -> think -> act`.
+- Playwright explorer performs route discovery and page signal capture.
+- Repo scanner inventories routes/tests and Cypress structure.
+- Gap engine computes deterministic quality gaps and release confidence.
+- Reports are generated as JSON and Markdown.
+- State and decision logs are persisted in `.scan-state`.
 
 ## Tech Stack
 
 - TypeScript (strict, NodeNext)
 - Commander (CLI)
 - Zod (schemas and validation)
-- Playwright + axe-core integration points
-- Cypress integration points
+- Playwright (URL exploration)
+- fast-glob (repo analysis)
+- Anthropic API integration (optional scenario generation)
 
 ## Project Structure
 
@@ -39,8 +43,18 @@ Primary config lives in `quilib.config.ts` and is typed with `HarnessConfig`.
 ## Scripts
 
 - `npm run dev` - run CLI entry (`src/cli/index.ts`)
-- `npm run analyze` - run analyze command entry
+- `npm run analyze -- --url <app-url> [--repo <repo-path>]` - run full analysis pipeline
 - `npm run build` - compile TypeScript into `dist/`
+
+## Usage
+
+```bash
+# analyze app only
+npm run analyze -- --url http://localhost:3000
+
+# analyze app + repo
+npm run analyze -- --url http://localhost:3000 --repo ../notquality-app
+```
 
 ## Validate Setup
 
@@ -52,12 +66,16 @@ npx tsc --noEmit
 ## Output and State Folders
 
 - `.scan-state/` holds persisted scan state files.
-- `output/` holds generated reports/tests.
-- `.gitkeep` placeholders preserve required empty directories.
+- `output/` holds generated reports.
 
-## Next Milestones
+Expected state files:
 
-1. Implement `observe` phase to collect route/repo inventory.
-2. Implement `think` phase gap analysis and scenario generation.
-3. Implement `act` phase adapter rendering + report writing.
-4. Wire CLI command to end-to-end harness flow.
+- `.scan-state/discovered-routes.json`
+- `.scan-state/repo-inventory.json` (when `--repo` is provided)
+- `.scan-state/gap-analysis.json`
+- `.scan-state/decision-log.json`
+
+Expected reports:
+
+- `output/report.json`
+- `output/report.md`
