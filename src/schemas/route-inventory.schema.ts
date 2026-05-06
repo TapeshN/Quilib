@@ -11,6 +11,7 @@ export const A11yViolationSchema = z.object({
 export const RouteSchema = z.object({
   path: z.string(),
   pageTitle: z.string(),
+  links: z.array(z.string()),
   formCount: z.number().int(),
   buttonLabels: z.array(z.string()),
   consoleErrors: z.array(z.string()),

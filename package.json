@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "quilib": "./bin/quilib.js"
+  },
   "scripts": {
     "dev": "tsx src/cli/index.ts",
     "analyze": "tsx src/cli/index.ts analyze",
