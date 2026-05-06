@@ -1,0 +1,23 @@
+{
+  "name": "aqiw",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/cli/index.ts",
+    "analyze": "tsx src/cli/index.ts analyze",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.9.0",
+    "@playwright/test": "^1.44.0",
+    "commander": "^12.1.0",
+    "fast-glob": "^3.3.2",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.scan-state/*
+!.scan-state/.gitkeep
+output/*
+!output/.gitkeep
