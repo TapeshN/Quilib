@@ -1,6 +1,10 @@
 import type { HarnessConfig } from '../schemas/config.schema.js';
-import type { RouteInventory } from '../schemas/route-inventory.schema.js';
-import type { RepoAnalysis } from '../schemas/repo-analysis.schema.js';
+import { RouteInventorySchema, type RouteInventory } from '../schemas/route-inventory.schema.js';
+import { RepoAnalysisSchema, type RepoAnalysis } from '../schemas/repo-analysis.schema.js';
+import { createExplorer } from '../tools/explorer-factory.js';
+import { scanRepo } from '../tools/repo-scanner.js';
+import { StateManager } from '../harness/state-manager.js';
+import { logDecision } from '../harness/decision-logger.js';
 
 export interface ObserveResult {
   routes: RouteInventory;
@@ -12,5 +16,44 @@ export async function observe(
   repoPath: string | undefined,
   config: HarnessConfig
 ): Promise<ObserveResult> {
-  throw new Error('Not implemented');
+  const explorer = createExplorer(config.explorer);
+  const stateManager = new StateManager();
+
+  const rawRoutes = await explorer.explore(baseUrl, config);
+  const routes = RouteInventorySchema.parse(rawRoutes);
+  await stateManager.writeState('discovered-routes.json', routes, RouteInventorySchema);
+
+  await logDecision({
+    timestamp: new Date().toISOString(),
+    phase: 'observe',
+    decision: 'exploration-complete',
+    reason: `Discovered ${routes.routes.length} routes; budgetExceeded=${routes.budgetExceeded}`,
+    metadata: {
+      baseUrl,
+      scannedRoutes: routes.routes.length,
+      budgetExceeded: routes.budgetExceeded,
+      pagesSkipped: routes.pagesSkipped,
+    },
+  });
+
+  let repo: RepoAnalysis | null = null;
+  if (repoPath) {
+    const rawRepo = await scanRepo(repoPath);
+    repo = RepoAnalysisSchema.parse(rawRepo);
+    await stateManager.writeState('repo-inventory.json', repo, RepoAnalysisSchema);
+
+    await logDecision({
+      timestamp: new Date().toISOString(),
+      phase: 'observe',
+      decision: 'repo-scan-complete',
+      reason: `Scanned repo inventory: ${repo.routes.length} routes, ${repo.testFiles.length} test files`,
+      metadata: {
+        repoPath,
+        routeCount: repo.routes.length,
+        testFileCount: repo.testFiles.length,
+      },
+    });
+  }
+
+  return { routes, repo };
 }
