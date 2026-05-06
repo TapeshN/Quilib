@@ -1,6 +1,6 @@
-# AQIW
+# Quilib
 
-Adaptive Quality Intelligence Wrapper (AQIW) is a TypeScript-first QA harness scaffold for analyzing app quality gaps and generating test assets through pluggable explorers and adapters.
+Quilib is a TypeScript-first QA harness scaffold for analyzing app quality gaps and generating test assets through pluggable explorers and adapters.
 
 ## Current Status
 
@@ -34,7 +34,7 @@ src/
 
 ## Configuration
 
-Primary config lives in `aqiw.config.ts` and is typed with `HarnessConfig`.
+Primary config lives in `quilib.config.ts` and is typed with `HarnessConfig`.
 
 ## Scripts
 

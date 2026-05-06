@@ -3,8 +3,8 @@ import { Command } from 'commander';
 const program = new Command();
 
 program
-  .name('aqiw')
-  .description('Adaptive Quality Intelligence Wrapper — QA harness')
+  .name('quilib')
+  .description('Quilib — QA harness')
   .version('0.1.0');
 
 program
