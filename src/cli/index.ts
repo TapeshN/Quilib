@@ -19,6 +19,20 @@ async function loadConfigFile(relativePath: string): Promise<HarnessConfig> {
   return HarnessConfigSchema.parse(configModule.default);
 }
 
+function redactConfigForLog(config: HarnessConfig): Record<string, unknown> {
+  const base = { ...config } as Record<string, unknown>;
+  if (config.auth?.type === 'form-login') {
+    base.auth = {
+      ...config.auth,
+      credentials: {
+        username: config.auth.credentials.username,
+        password: '***',
+      },
+    };
+  }
+  return base;
+}
+
 async function runAnalyze(options: {
   url: string;
   repo?: string;
@@ -40,7 +54,7 @@ async function runAnalyze(options: {
     console.error('[quilib] Ephemeral mode: no disk writes; full result JSON on stdout');
   } else {
     console.log('[quilib] Detected mode:', mode);
-    console.log('[quilib] Active config:', config);
+    console.log('[quilib] Active config:', redactConfigForLog(config));
   }
 
   const observed = await observe(validatedUrl, options.repo, config, artifacts);
