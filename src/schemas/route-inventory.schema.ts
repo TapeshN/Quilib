@@ -2,10 +2,15 @@ import { z } from 'zod';
 
 export const A11yViolationSchema = z.object({
   id: z.string(),
-  impact: z.enum(['minor', 'moderate', 'serious', 'critical']),
-  description: z.string(),
+  impact: z.string(),
   helpUrl: z.string(),
-  nodes: z.number().int(),
+  nodeCount: z.number().int(),
+});
+
+export const BrokenLinkSchema = z.object({
+  url: z.string(),
+  status: z.number().nullable(),
+  reason: z.string().optional(),
 });
 
 export const RouteSchema = z.object({
@@ -15,7 +20,7 @@ export const RouteSchema = z.object({
   formCount: z.number().int(),
   buttonLabels: z.array(z.string()),
   consoleErrors: z.array(z.string()),
-  brokenLinks: z.array(z.string()),
+  brokenLinks: z.array(BrokenLinkSchema),
   a11yViolations: z.array(A11yViolationSchema),
   statusCode: z.number().int().optional(),
 });

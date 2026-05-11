@@ -23,6 +23,12 @@ export async function writeMarkdownReport(analysis: GapAnalysis, outputDir: stri
 **Mode:** ${analysis.mode}
 **Release confidence:** ${analysis.releaseConfidence}/100 — ${recommendation}
 
+## Coverage
+
+- Pages scanned: ${analysis.coveragePagesScanned}
+- Scan budget exhausted (unfinished queue): ${analysis.coverageBudgetExceeded ? 'yes' : 'no'}
+${analysis.coverageWarning ? `- Warning: **${analysis.coverageWarning}**` : '- Warning: none'}
+
 ## Coverage gaps (${analysis.gaps.length})
 
 | Path | Category | Severity | Reason |

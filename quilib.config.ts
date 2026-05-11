@@ -3,6 +3,7 @@ import type { HarnessConfig } from './src/schemas/config.schema.js';
 const config: HarnessConfig = {
   maxPagesToScan: 20,
   maxDepth: 3,
+  minPagesForConfidence: 3,
   timeoutMs: 30000,
   retryCount: 2,
   llmTokenBudget: 4000,

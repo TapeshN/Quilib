@@ -1,10 +1,13 @@
 import { chromium } from '@playwright/test';
+import { AxeBuilder } from '@axe-core/playwright';
+import type { AppExplorer } from './explorer.interface.js';
 import { RouteInventorySchema, type RouteInventory, type Route } from '../schemas/route-inventory.schema.js';
 import type { HarnessConfig } from '../schemas/config.schema.js';
 
-export class PlaywrightExplorer {
+export class PlaywrightExplorer implements AppExplorer {
   async explore(baseUrl: string, config: HarnessConfig): Promise<RouteInventory> {
     const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext();
     const visited = new Set<string>();
     const queue: string[] = [baseUrl];
     const routes: Route[] = [];
@@ -26,7 +29,7 @@ export class PlaywrightExplorer {
         if (visited.has(normalized)) continue;
         visited.add(normalized);
 
-        const page = await browser.newPage();
+        const page = await context.newPage();
         const consoleErrors: string[] = [];
 
         page.on('console', (msg) => {
@@ -63,10 +66,39 @@ export class PlaywrightExplorer {
             })
             .map((href) => href.split('?')[0].split('#')[0]);
 
-          for (const link of internalLinks) {
+          const uniqueInternal = [...new Set(internalLinks)];
+
+          for (const link of uniqueInternal) {
             if (!visited.has(link) && !queue.includes(link)) {
               queue.push(link);
             }
+          }
+
+          const brokenLinks: Route['brokenLinks'] = [];
+          for (const link of uniqueInternal.slice(0, 20)) {
+            try {
+              const response = await page.request.head(link, { timeout: 5000 });
+              if (response.status() >= 400) {
+                brokenLinks.push({ url: link, status: response.status() });
+              }
+            } catch (err) {
+              brokenLinks.push({ url: link, status: null, reason: String(err) });
+            }
+          }
+
+          let a11yViolations: Route['a11yViolations'] = [];
+          try {
+            const axeResults = await new AxeBuilder({ page })
+              .withTags(['wcag2a', 'wcag2aa'])
+              .analyze();
+            a11yViolations = axeResults.violations.map((v) => ({
+              id: v.id,
+              impact: v.impact ?? 'unknown',
+              helpUrl: v.helpUrl,
+              nodeCount: v.nodes.length,
+            }));
+          } catch (err) {
+            consoleErrors.push(`axe-core failure: ${String(err)}`);
           }
 
           const path = new URL(url).pathname || '/';
@@ -74,12 +106,12 @@ export class PlaywrightExplorer {
           routes.push({
             path,
             pageTitle,
-            links: internalLinks,
+            links: uniqueInternal,
             formCount,
             buttonLabels: buttonLabels.map((b) => b.trim()).filter(Boolean),
             consoleErrors,
-            brokenLinks: [],
-            a11yViolations: [],
+            brokenLinks,
+            a11yViolations,
           });
         } catch (err) {
           const path = (() => {
@@ -104,6 +136,7 @@ export class PlaywrightExplorer {
         }
       }
     } finally {
+      await context.close();
       await browser.close();
     }
 

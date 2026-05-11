@@ -6,6 +6,7 @@ export type AdapterType = 'playwright' | 'cypress-e2e' | 'cypress-component' | '
 export const HarnessConfigSchema = z.object({
   maxPagesToScan: z.number().int().positive(),
   maxDepth: z.number().int().positive(),
+  minPagesForConfidence: z.number().int().min(1).default(3),
   timeoutMs: z.number().int().positive(),
   retryCount: z.number().int().min(0),
   llmTokenBudget: z.number().int().positive(),

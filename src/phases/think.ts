@@ -15,7 +15,7 @@ export async function think(
   const stateManager = new StateManager();
 
   const partialAnalysis = GapAnalysisSchema.parse({
-    ...analyzeGaps(observed.routes, observed.repo, mode),
+    ...analyzeGaps(observed.routes, observed.repo, mode, config),
     scenarios: [],
     generatedTests: [],
   });
