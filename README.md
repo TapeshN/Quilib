@@ -40,10 +40,13 @@ src/
 
 Primary config lives in `quilib.config.ts` and is typed with `HarnessConfig`.
 
+Optional **authenticated scanning** uses `auth` on the config (`form-login` or `storage-state`). See the commented example in `quilib.config.ts`. For local-only credentials, use a separate file such as `quilib.test-auth.config.ts` (listed in `.gitignore`) and pass `--config quilib.test-auth.config.ts`.
+
 ## Scripts
 
 - `npm run dev` - run CLI entry (`src/cli/index.ts`)
 - `npm run analyze -- --url <app-url> [--repo <repo-path>]` - run full analysis pipeline
+- `npm run clean` - remove `output/` and `.scan-state/` (generated artifacts)
 - `npm run build` - compile TypeScript into `dist/`
 
 ## Usage
@@ -54,6 +57,15 @@ npm run analyze -- --url http://localhost:3000
 
 # analyze app + repo
 npm run analyze -- --url http://localhost:3000 --repo ../notquality-app
+
+# alternate config file (e.g. local auth — keep that file out of git)
+npm run analyze -- --config quilib.test-auth.config.ts --url https://example.com
+
+# stateless run: no files on disk; full JSON payload on stdout (for MCP/CI)
+npm run analyze -- --url https://example.com --ephemeral
+
+# wipe generated output and scan state
+npm run clean
 ```
 
 ## Validate Setup
